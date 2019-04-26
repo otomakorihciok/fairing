@@ -17,6 +17,7 @@ from __future__ import absolute_import
 
 from __future__ import print_function
 
+import os
 import threading
 
 import httplib2
@@ -27,7 +28,7 @@ class Http(httplib2.Http):
 
   def __init__(self, transport_factory, size=8):
     self._condition = threading.Condition(threading.Lock())
-    self._transports = [transport_factory() for _ in range(size)]
+    self._transports = [transport_factory() if os.getenv('http_proxy', None) is None else transport_factory(proxy_info=httplib2.ProxyInfo(proxy_type=httplib2.socks.PROXY_TYPE_HTTP, proxy_host=os.environ['http_proxy'].split(':')[1].lstrip('/'), proxy_port=int(os.environ['http_proxy'].split(':')[2]))) for _ in range(size)]
 
   def _get_transport(self):
     with self._condition:
